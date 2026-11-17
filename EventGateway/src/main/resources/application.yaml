@@ -1,0 +1,98 @@
+server:
+  port: 8800
+account-service:
+  url: http://localhost:8080
+spring:
+  application:
+    name: EventGateway
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+  datasource:
+    url: jdbc:h2:mem:eventgateway;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      pool-name: EventGatewayHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+  bulkhead:
+    instances:
+      default:
+        maxConcurrentCalls: 10
+        maxWaitDuration: 0
+  timelimiter:
+    instances:
+      default:
+        timeoutDuration: 3s
+        cancelRunningFuture: true
+  retry:
+    instances:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  ratelimiter:
+    instances:
+      default:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 10000ms
+        registerHealthIndicator: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
