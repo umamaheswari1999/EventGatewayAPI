@@ -89,6 +89,8 @@ curl.exe -i http://localhost:8800/health
 
 Returns **200 OK** with `{"status":"UP"}` when the Event Gateway process is serving requests. This is a lightweight liveness endpoint; it does not check the database or Account Service.
 
+Spring Boot Actuator is also enabled. `GET /actuator/health` reports configured health indicators; `info` and `metrics` are available under `/actuator` as well. The Prometheus endpoint is exposed in configuration, but needs a Prometheus Micrometer registry dependency to provide scrape output.
+
 ### Create and forward an event
 
 `POST /events`
@@ -167,4 +169,4 @@ Tests cover the REST endpoints, request validation, service and mapper behavior,
 
 - Start the Account Service separately and ensure its transaction endpoint matches the Feign mapping before testing event creation.
 - A failed Account Service call is surfaced to the API caller as 503; this application does not currently queue failed transactions for later delivery.
-- The `/health` route is a custom liveness endpoint. Actuator endpoint exposure is configured in `application.yaml`, but an Actuator dependency is not currently declared in `pom.xml`; add it if detailed health components or metrics endpoints are needed.
+- The custom `/health` route is a lightweight liveness check; use `/actuator/health` for Actuator health indicators.
